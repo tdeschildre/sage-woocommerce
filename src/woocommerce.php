@@ -46,7 +46,24 @@ if (defined('WC_ABSPATH')) {
                 return apply_filters("sage/template/{$class}/data", $data);
             }, []);
 
-            echo template($theme_template, array_merge(
+            // Get back to blade view syntax
+            $paths = apply_filters('sage/filter_templates/paths', [
+                'views',
+                'resources/views',
+            ]);
+            $paths_pattern = "#^(" . implode('|', $paths) . ")/#";
+
+            $blade_template = WC()->template_path() . str_replace('.php', '', $template_name);
+
+            /** Remove .blade.php/.blade/.php from template names */
+            $blade_template = preg_replace('#\.(blade\.?)?(php)?$#', '', ltrim($blade_template));
+
+            /** Remove partial $paths from the beginning of template names */
+            if (strpos($blade_template, '/')) {
+                $blade_template = preg_replace($paths_pattern, '', $blade_template);
+            }
+
+            echo template($blade_template, array_merge(
                 compact(explode(' ', 'template_name template_path located args')),
                 $data,
                 $args
